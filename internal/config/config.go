@@ -10,7 +10,7 @@ import (
 const TTL = time.Hour * 1
 
 type Config struct {
-	Env         string `yaml:"env" env-default:"local"`
+	Env         string `yaml:"env" env-default:"prod"`
 	StoragePath string `yaml:"storage_path" env-required:"./data"`
 	TokenTTL    time.Duration
 	GRPC        GRPConfig `yaml:"grpc"`
