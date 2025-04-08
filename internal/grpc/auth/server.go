@@ -28,6 +28,7 @@ type Auth interface {
 		password string,
 	) (userID int64, err error)
 	IsAdmin(ctx context.Context, userId int64) (bool, error)
+	SetAdmin(ctx context.Context, email string) (bool, error)
 }
 
 const (
@@ -86,6 +87,21 @@ func (s *serverAPI) IsAdmin(ctx context.Context, req *ssov1.IsAdminRequest) (*ss
 	return &ssov1.IsAdminResponse{IsAdmin: isAdmin}, nil
 }
 
+func (s *serverAPI) SetAdmin(ctx context.Context, req *ssov1.SetAdminRequest) (*ssov1.SetAdminResponse, error) {
+	if err := validateSetAdmin(req); err != nil {
+		return nil, err
+	}
+
+	isAdmin, err := s.auth.SetAdmin(ctx, req.GetEmail())
+	if err != nil {
+		if errors.Is(err, auth.ErrUserNotFound) {
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+	return &ssov1.SetAdminResponse{IsAdmin: isAdmin}, nil
+}
+
 func validateLogin(req *ssov1.LoginRequest) error {
 	if req.GetEmail() == emptyString {
 		return status.Error(codes.InvalidArgument, "email is required")
@@ -119,4 +135,13 @@ func validateIsAdmin(req *ssov1.IsAdminRequest) error {
 		return status.Error(codes.Internal, "user_id is required")
 	}
 	return nil
+}
+
+func validateSetAdmin(req *ssov1.SetAdminRequest) error {
+
+	if req.GetEmail() == emptyString {
+		return status.Error(codes.InvalidArgument, "email is required")
+	}
+	return nil
+
 }

@@ -119,3 +119,27 @@ func (s *Storage) App(ctx context.Context, appID int) (models.App, error) {
 	return app, nil
 
 }
+
+func (s *Storage) SetAdmin(ctx context.Context, email string) (bool, error) {
+	const op = "storage.sqlite.SetAdmin"
+
+	stmt, err := s.db.Prepare("UPDATE users SET is_admin = true WHERE email = ?")
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+
+	res, err := stmt.ExecContext(ctx, email)
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+	if rowsAffected == 0 {
+		return false, fmt.Errorf("%s: %w", op, auth.ErrUserNotFound)
+	}
+
+	return true, nil
+}

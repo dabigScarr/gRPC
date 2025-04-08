@@ -18,6 +18,7 @@ type Auth struct {
 	userSaver    UserSaver
 	userProvider UserProvider
 	appProvider  AppProvider
+	userAdmin    UserAdmin
 	tokenTTL     time.Duration
 }
 
@@ -45,11 +46,16 @@ type AppProvider interface {
 	App(ctx context.Context, appID int) (models.App, error)
 }
 
+type UserAdmin interface {
+	SetAdmin(ctx context.Context, email string) (bool, error)
+}
+
 func New(
 	log *slog.Logger,
 	userSaver UserSaver,
 	userProvider UserProvider,
 	appProvider AppProvider,
+	userAdmin UserAdmin,
 	tokenTTL time.Duration,
 ) *Auth {
 	return &Auth{
@@ -57,6 +63,7 @@ func New(
 		userProvider: userProvider,
 		log:          log,
 		appProvider:  appProvider,
+		userAdmin:    userAdmin,
 		tokenTTL:     tokenTTL,
 	}
 }
@@ -154,6 +161,27 @@ func (a *Auth) IsAdmin(ctx context.Context, userID int64) (bool, error) {
 	}
 
 	log.Info("checked if user is admin", slog.Bool("is_admin", isAdmin))
+
+	return isAdmin, nil
+}
+
+func (a *Auth) SetAdmin(ctx context.Context, email string) (bool, error) {
+	const op = "auth.SetAdmin"
+
+	log := a.log.With(
+		slog.String("op", op),
+		slog.String("email", email),
+	)
+
+	log.Info("setting new admin")
+
+	isAdmin, err := a.userAdmin.SetAdmin(ctx, email)
+	if err != nil {
+		log.Error("failed to set admin", sl.Err(err))
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("new admin successfully set", slog.Bool("is_admin", isAdmin))
 
 	return isAdmin, nil
 }
