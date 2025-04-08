@@ -23,10 +23,7 @@ type GRPConfig struct {
 
 func MustLoad() *Config {
 
-	path := os.Getenv("CONFIG_PATH")
-	if path == "" {
-		panic("config path is empty")
-	}
+	path := "/root/apps/grpc-auth/config/prod.yaml"
 
 	return MustLoadByPath(path)
 }

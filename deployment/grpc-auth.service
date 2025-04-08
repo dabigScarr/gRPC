@@ -9,7 +9,6 @@ ExecStart=/root/apps/grpc-auth/grpc-auth --config=/root/apps/grpc-auth/config/pr
 Restart=always
 RestartSec=4
 StandardOutput=inherit
-Environment="CONFIG_PATH=/root/apps/grpc-auth/config/prod.yaml"
 
 [Install]
 WantedBy=multi-user.target
